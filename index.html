@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -75,4 +76,87 @@
           const data = await res.json();
           // Adjust this line to match the actual JSON structure from the API
           const price = parseFloat(data.price_xrp ?? data.price ?? data.last_price);
-          if (
+          if (isNaN(price)) {
+            console.error("Price field missing or not numeric:", data);
+            return null;
+          }
+          return price;
+        } catch (e) {
+          console.error("XRPL fetch error:", e);
+          return null;
+        }
+      }
+
+      // Build initial candles (50 x 1‑minute candles)
+      async function buildInitialCandles() {
+        const candles = [];
+        const now = Math.floor(Date.now() / 1000);
+        const baseTime = now - 50 * 60; // 50 minutes back
+
+        for (let i = 0; i < 50; i++) {
+          const price = (await getLivePrice()) || 0.0001;
+          const t = baseTime + i * 60; // 1‑minute steps
+
+          const candle = {
+            time: t,
+            open: price,
+            high: price * 1.02,
+            low: price * 0.98,
+            close: price,
+          };
+
+          candles.push(candle);
+
+          // Small delay to avoid hammering the API (optional)
+          await new Promise((r) => setTimeout(r, 200));
+        }
+
+        return candles;
+      }
+
+      async function init() {
+        const candles = await buildInitialCandles();
+
+        if (!candles.length) {
+          console.error("No candles built, cannot render chart.");
+          return;
+        }
+
+        // Ensure times are strictly increasing
+        candles.sort((a, b) => a.time - b.time);
+        series.setData(candles);
+
+        // Live updates: 1‑minute candle
+        setInterval(async () => {
+          const price = await getLivePrice();
+          if (!price) return;
+
+          // Align to current minute
+          const t = Math.floor(Date.now() / 1000 / 60) * 60;
+
+          const candle = {
+            time: t,
+            open: price,
+            high: price * 1.02,
+            low: price * 0.98,
+            close: price,
+          };
+
+          // Update last candle if same minute, otherwise append
+          const last = candles[candles.length - 1];
+          if (last && last.time === t) {
+            candles[candles.length - 1] = candle;
+            series.update(candle);
+          } else {
+            candles.push(candle);
+            series.update(candle);
+          }
+        }, 60_000);
+      }
+
+      init();
+    });
+  </script>
+</body>
+</html>
+```
