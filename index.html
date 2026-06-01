@@ -5,38 +5,47 @@
   <title>XDX/XRP Live Chart</title>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <style>
-    body { margin: 0; background: #0d1117; }
-    #chart { width: 100vw; height: 100vh; }
+    body {
+      margin: 0;
+      background: #0d1117;
+    }
+    #chart {
+      width: 100vw;
+      height: 100vh;
+    }
   </style>
 </head>
 <body>
   <div id="chart"></div>
 
   <script>
-  const chart = LightweightCharts.createChart(document.getElementById("chart"), {
-    layout: { background: { color: "#0d1117" }, textColor: "#d1d5db" },
-    grid: { vertLines: { color: "#1f2937" }, horzLines: { color: "#1f2937" } }
-  });
-
-  const series = chart.addCandlestickSeries();
-
-  // Generate dummy candles to confirm rendering
-  const now = Math.floor(Date.now() / 1000);
-  const candles = [];
-  for (let i = 0; i < 50; i++) {
-    const base = 0.0001 + i * 0.000002;
-    candles.push({
-      time: now - (50 - i) * 60,
-      open: base,
-      high: base * 1.02,
-      low: base * 0.98,
-      close: base * (1 + (Math.random() - 0.5) * 0.02)
+    const chart = LightweightCharts.createChart(document.getElementById("chart"), {
+      layout: {
+        background: { color: "#0d1117" },
+        textColor: "#d1d5db"
+      },
+      grid: {
+        vertLines: { color: "#1f2937" },
+        horzLines: { color: "#1f2937" }
+      }
     });
-  }
 
-  series.setData(candles);
-</script>
+    const series = chart.addCandlestickSeries();
 
+    const now = Math.floor(Date.now() / 1000);
+    const candles = [];
+    for (let i = 0; i < 50; i++) {
+      const base = 0.0001 + i * 0.000002;
+      candles.push({
+        time: now - (50 - i) * 60,
+        open: base,
+        high: base * 1.02,
+        low: base * 0.98,
+        close: base * (1 + (Math.random() - 0.5) * 0.02)
+      });
+    }
 
+    series.setData(candles);
+  </script>
 </body>
 </html>
