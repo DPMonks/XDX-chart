@@ -1,63 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>XRP/USD Live Chart</title>
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-  <style>
-    body { margin: 0; background: #0d1117; }
-    #chart { width: 100vw; height: 100vh; }
-  </style>
+<meta charset="UTF-8" />
+<title>XDX Neon Chart</title>
+<style>
+    body {
+        margin: 0;
+        background: #000;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+    }
+
+    #chart {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    /* Neon glow effect using CSS filters */
+    .neon-candle {
+        filter: drop-shadow(0 0 6px rgba(255,0,0,0.9))
+                drop-shadow(0 0 12px rgba(255,0,0,0.6));
+    }
+
+    .neon-candle-green {
+        filter: drop-shadow(0 0 6px rgba(0,255,0,0.9))
+                drop-shadow(0 0 12px rgba(0,255,0,0.6));
+    }
+</style>
 </head>
 <body>
-  <div id="chart"></div>
 
-  <script>
-    const chart = LightweightCharts.createChart(document.getElementById("chart"), {
-      layout: { background: { color: "#0d1117" }, textColor: "#d1d5db" },
-      grid: { vertLines: { color: "#1f2937" }, horzLines: { color: "#1f2937" } }
+<div id="chart"></div>
+
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+<script>
+    const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+        layout: {
+            background: { color: '#000000' },
+            textColor: '#ffffff',
+        },
+        grid: {
+            vertLines: { color: 'rgba(255,255,255,0.05)' },
+            horzLines: { color: 'rgba(255,255,255,0.05)' },
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+        timeScale: {
+            borderColor: 'rgba(255,255,255,0.1)',
+        },
+        rightPriceScale: {
+            borderColor: 'rgba(255,255,255,0.1)',
+        },
     });
-    const series = chart.addCandlestickSeries();
 
-    async function getXRPCandles() {
-      const target = "https://api.coingecko.com/api/v3/coins/ripple/ohlc?vs_currency=usd&days=1";
-      const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(target);
+    const candleSeries = chart.addCandlestickSeries({
+        upColor: '#00ff00',
+        downColor: '#ff0000',
+        borderUpColor: '#00ff00',
+        borderDownColor: '#ff0000',
+        wickUpColor: '#00ff00',
+        wickDownColor: '#ff0000',
+    });
 
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) throw new Error("Empty data");
-        return data.map(c => ({
-          time: Math.floor(c[0] / 1000),
-          open: c[1],
-          high: c[2],
-          low: c[3],
-          close: c[4]
-        }));
-      } catch (err) {
-        console.warn("Using fallback candle data:", err.message);
-        const now = Math.floor(Date.now() / 1000);
-        const candles = [];
-        let price = 0.52;
-        for (let i = 0; i < 50; i++) {
-          const open = price;
-          const close = open + (Math.random() - 0.5) * 0.01;
-          const high = Math.max(open, close) + Math.random() * 0.005;
-          const low = Math.min(open, close) - Math.random() * 0.005;
-          candles.push({ time: now - (50 - i) * 60, open, high, low, close });
-          price = close;
-        }
-        return candles;
-      }
-    }
+    // Dummy data for design preview
+    candleSeries.setData([
+        { time: '2024-01-01', open: 1, high: 3, low: 1, close: 2 },
+        { time: '2024-01-02', open: 2, high: 4, low: 2, close: 3 },
+        { time: '2024-01-03', open: 3, high: 3.5, low: 2, close: 2.2 },
+        { time: '2024-01-04', open: 2.2, high: 5, low: 2, close: 4.5 },
+    ]);
 
-    async function loadChart() {
-      const candles = await getXRPCandles();
-      series.setData(candles);
-    }
+    // Apply neon glow to canvas elements
+    const applyNeonGlow = () => {
+        const canvases = document.querySelectorAll('canvas');
+        canvases.forEach(c => {
+            c.classList.add('neon-candle');
+        });
+    };
 
-    loadChart();
-    setInterval(loadChart, 60000);
-  </script>
+    setTimeout(applyNeonGlow, 300);
+</script>
+
 </body>
 </html>
