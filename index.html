@@ -20,13 +20,16 @@
 
   const series = chart.addCandlestickSeries();
 
-  // Dummy data to confirm chart renders
-  const candles = [];
-  for (let i = 0; i < 50; i++) {
-    const price = 0.0001 + Math.random() * 0.00005;
-    const t = Math.floor(Date.now() / 1000) - (50 - i) * 60;
-    candles.push({ time: t, open: price, high: price * 1.02, low: price * 0.98, close: price });
-  }
+  // Simple dummy candles to prove rendering
+  const now = Math.floor(Date.now() / 1000);
+  const candles = [
+    { time: now - 240, open: 0.0001, high: 0.00012, low: 0.00009, close: 0.00011 },
+    { time: now - 180, open: 0.00011, high: 0.00013, low: 0.0001, close: 0.00012 },
+    { time: now - 120, open: 0.00012, high: 0.00014, low: 0.00011, close: 0.00013 },
+    { time: now - 60,  open: 0.00013, high: 0.00015, low: 0.00012, close: 0.00014 },
+    { time: now,       open: 0.00014, high: 0.00016, low: 0.00013, close: 0.00015 }
+  ];
+
   series.setData(candles);
 </script>
 
