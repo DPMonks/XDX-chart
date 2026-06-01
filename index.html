@@ -1,9 +1,8 @@
-```html
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>XDX/XRP Live Chart</title>
+  <title>XDX/XRP Live Chart - Minimal Test</title>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     body {
@@ -24,9 +23,16 @@
     document.addEventListener("DOMContentLoaded", () => {
       const container = document.getElementById("chart");
 
-      // Safety check in case the library fails to load
+      console.log("Container:", container);
+      console.log("LightweightCharts:", typeof LightweightCharts);
+
+      if (!container) {
+        console.error("Chart container not found");
+        return;
+      }
+
       if (typeof LightweightCharts === "undefined") {
-        console.error("LightweightCharts library not loaded.");
+        console.error("LightweightCharts library not loaded");
         return;
       }
 
@@ -35,17 +41,17 @@
         height: container.clientHeight,
         layout: {
           background: { color: "#0d1117" },
-          textColor: "#d1d5db"
+          textColor: "#d1d5db",
         },
         grid: {
           vertLines: { color: "#1f2937" },
-          horzLines: { color: "#1f2937" }
+          horzLines: { color: "#1f2937" },
         },
         timeScale: {
-          borderColor: "#1f2937"
+          borderColor: "#1f2937",
         },
         rightPriceScale: {
-          borderColor: "#1f2937"
+          borderColor: "#1f2937",
         },
       });
 
@@ -57,6 +63,25 @@
         wickDownColor: "#ef4444",
       });
 
+      // Simple dummy data: 50 candles, 1‑minute apart
+      const now = Math.floor(Date.now() / 1000);
+      const candles = [];
+      let price = 0.0005;
+
+      for (let i = 0; i < 50; i++) {
+        const t = now - (50 - i) * 60;
+        const open = price;
+        const close = price * (1 + (Math.random() - 0.5) * 0.05);
+        const high = Math.max(open, close) * 1.02;
+        const low = Math.min(open, close) * 0.98;
+
+        candles.push({ time: t, open, high, low, close });
+        price = close;
+      }
+
+      console.log("Setting data, candles length:", candles.length);
+      series.setData(candles);
+
       // Resize handling
       window.addEventListener("resize", () => {
         chart.applyOptions({
@@ -64,99 +89,7 @@
           height: container.clientHeight,
         });
       });
-
-      // Fetch live XDX/XRP price from XRPL.Services
-      async function getLivePrice() {
-        try {
-          const res = await fetch("https://xrpl.services/api/v1/token/XDX");
-          if (!res.ok) {
-            console.error("XRPL response not OK:", res.status, res.statusText);
-            return null;
-          }
-          const data = await res.json();
-          // Adjust this line to match the actual JSON structure from the API
-          const price = parseFloat(data.price_xrp ?? data.price ?? data.last_price);
-          if (isNaN(price)) {
-            console.error("Price field missing or not numeric:", data);
-            return null;
-          }
-          return price;
-        } catch (e) {
-          console.error("XRPL fetch error:", e);
-          return null;
-        }
-      }
-
-      // Build initial candles (50 x 1‑minute candles)
-      async function buildInitialCandles() {
-        const candles = [];
-        const now = Math.floor(Date.now() / 1000);
-        const baseTime = now - 50 * 60; // 50 minutes back
-
-        for (let i = 0; i < 50; i++) {
-          const price = (await getLivePrice()) || 0.0001;
-          const t = baseTime + i * 60; // 1‑minute steps
-
-          const candle = {
-            time: t,
-            open: price,
-            high: price * 1.02,
-            low: price * 0.98,
-            close: price,
-          };
-
-          candles.push(candle);
-
-          // Small delay to avoid hammering the API (optional)
-          await new Promise((r) => setTimeout(r, 200));
-        }
-
-        return candles;
-      }
-
-      async function init() {
-        const candles = await buildInitialCandles();
-
-        if (!candles.length) {
-          console.error("No candles built, cannot render chart.");
-          return;
-        }
-
-        // Ensure times are strictly increasing
-        candles.sort((a, b) => a.time - b.time);
-        series.setData(candles);
-
-        // Live updates: 1‑minute candle
-        setInterval(async () => {
-          const price = await getLivePrice();
-          if (!price) return;
-
-          // Align to current minute
-          const t = Math.floor(Date.now() / 1000 / 60) * 60;
-
-          const candle = {
-            time: t,
-            open: price,
-            high: price * 1.02,
-            low: price * 0.98,
-            close: price,
-          };
-
-          // Update last candle if same minute, otherwise append
-          const last = candles[candles.length - 1];
-          if (last && last.time === t) {
-            candles[candles.length - 1] = candle;
-            series.update(candle);
-          } else {
-            candles.push(candle);
-            series.update(candle);
-          }
-        }, 60_000);
-      }
-
-      init();
     });
   </script>
 </body>
 </html>
-```
