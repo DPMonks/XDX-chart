@@ -20,18 +20,23 @@
 
   const series = chart.addCandlestickSeries();
 
-  // Simple dummy candles to prove rendering
+  // Generate dummy candles to confirm rendering
   const now = Math.floor(Date.now() / 1000);
-  const candles = [
-    { time: now - 240, open: 0.0001, high: 0.00012, low: 0.00009, close: 0.00011 },
-    { time: now - 180, open: 0.00011, high: 0.00013, low: 0.0001, close: 0.00012 },
-    { time: now - 120, open: 0.00012, high: 0.00014, low: 0.00011, close: 0.00013 },
-    { time: now - 60,  open: 0.00013, high: 0.00015, low: 0.00012, close: 0.00014 },
-    { time: now,       open: 0.00014, high: 0.00016, low: 0.00013, close: 0.00015 }
-  ];
+  const candles = [];
+  for (let i = 0; i < 50; i++) {
+    const base = 0.0001 + i * 0.000002;
+    candles.push({
+      time: now - (50 - i) * 60,
+      open: base,
+      high: base * 1.02,
+      low: base * 0.98,
+      close: base * (1 + (Math.random() - 0.5) * 0.02)
+    });
+  }
 
   series.setData(candles);
 </script>
+
 
 </body>
 </html>
