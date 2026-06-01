@@ -1,23 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>GBP/USD Chart</title>
+  <title>GBP/USD Live Chart</title>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <style>
-    body { margin: 0; background: #0d1117; }
+    body { margin: 0; background: #0d1117; color: #fff; font-family: sans-serif; }
     #chart { width: 100vw; height: 100vh; }
+    #pairSelector {
+      position: absolute; top: 10px; left: 10px;
+      background: #1f2937; color: #fff; border: none;
+      padding: 8px 12px; border-radius: 6px; font-size: 14px;
+    }
   </style>
 </head>
 <body>
+  <select id="pairSelector">
+    <option value="GBP/USD">GBP/USD</option>
+    <option value="XDX/XRP">XDX/XRP</option>
+  </select>
   <div id="chart"></div>
 
   <script>
-    const API_KEY = "demo"; // replace with your key
-    const URL = `https://api.twelvedata.com/time_series?symbol=GBP/USD&interval=1min&apikey=${API_KEY}`;
+    const chart = LightweightCharts.createChart(document.getElementById("chart"), {
+      layout: { background: { color: "#0d1117" }, textColor: "#d1d5db" },
+      grid: { vertLines: { color: "#1f2937" }, horzLines: { color: "#1f2937" } }
+    });
+    const series = chart.addCandlestickSeries();
 
-    async function getForexCandles() {
-      const res = await fetch(URL);
+    async function getForexCandles(symbol = "GBP/USD") {
+      const API_KEY = "demo"; // replace with your TwelveData key
+      const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1min&apikey=${API_KEY}`;
+      const res = await fetch(url);
       const json = await res.json();
       return json.values.reverse().map(c => ({
         time: Math.floor(new Date(c.datetime).getTime() / 1000),
@@ -28,24 +42,17 @@
       }));
     }
 
-    async function init() {
-      const chart = LightweightCharts.createChart(document.getElementById("chart"), {
-        layout: { background: { color: "#0d1117" }, textColor: "#d1d5db" },
-        grid: { vertLines: { color: "#1f2937" }, horzLines: { color: "#1f2937" } }
-      });
-
-      const series = chart.addCandlestickSeries();
-
-      const candles = await getForexCandles();
-      series.setData(candles);
-
-      setInterval(async () => {
-        const candles = await getForexCandles();
-        series.update(candles[candles.length - 1]);
-      }, 60000);
-    }
-
-    init();
-  </script>
-</body>
-</html>
+    async function getXDXCandles() {
+      const XRPL = "https://s1.ripple.com:51234/";
+      const XDX = { currency: "XDX", issuer: "rMJAXYsbNzhwp7FfYnAsYP5ty3R9XnurPo" };
+      const candles = [];
+      for (let i = 0; i < 30; i++) {
+        const body = {
+          method: "book_offers",
+          params: [{ taker_gets: { currency: "XRP" }, taker_pays: XDX, limit: 1 }]
+        };
+        const res = await fetch(XRPL, { method: "POST", body: JSON.stringify(body) });
+        const json = await res.json();
+        const offer = json.result.offers?.[0];
+        if (!offer) continue;
+        const pays = parseFloat(offer
