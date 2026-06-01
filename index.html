@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>XDX/XRP Live Chart</title>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    body { margin: 0; background: #0d1117; }
+    #chart { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    const API = "https://s1.ripple.com:51234/";
+
+    const XDX = {
+      currency: "XDX",
+      issuer: "rMJAXYsbNzhwp7FfYnAsYP5ty3R9XnurPo"
+    };
+
+    async function getMidPrice() {
+      const body = {
+        method: "book_offers",
+        params: [{
+          taker_gets: { currency: "XRP" },
+          taker_pays: XDX,
+          limit: 1
+        }]
+      };
+
+      const res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify
