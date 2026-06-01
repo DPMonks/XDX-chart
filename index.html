@@ -32,20 +32,46 @@
 
     const series = chart.addCandlestickSeries();
 
-    const now = Math.floor(Date.now() / 1000);
-    const candles = [];
-    for (let i = 0; i < 50; i++) {
-      const base = 0.0001 + i * 0.000002;
-      candles.push({
-        time: now - (50 - i) * 60,
-        open: base,
-        high: base * 1.02,
-        low: base * 0.98,
-        close: base * (1 + (Math.random() - 0.5) * 0.02)
-      });
+    // Fetch live XDX/XRP price from XRPL.Services
+    async function getLivePrice() {
+      try {
+        const res = await fetch("https://xrpl.services/api/v1/token/XDX");
+        const data = await res.json();
+        return parseFloat(data.price_xrp);
+      } catch (e) {
+        console.error("XRPL fetch error:", e);
+        return null;
+      }
     }
 
-    series.setData(candles);
+    // Build initial candles
+    async function buildInitialCandles() {
+      const candles = [];
+      for (let i = 0; i < 50; i++) {
+        const price = await getLivePrice() || 0.0001;
+        const t = Math.floor(Date.now() / 1000) - (50 - i) * 60;
+        candles.push({ time: t, open: price, high: price * 1.02, low: price * 0.98, close: price });
+        await new Promise(r => setTimeout(r, 200));
+      }
+      return candles;
+    }
+
+    async function init() {
+      const candles = await buildInitialCandles();
+      series.setData(candles);
+
+      // Update every 10 seconds
+      setInterval(async () => {
+        const price = await getLivePrice();
+        if (!price) return;
+        const t = Math.floor(Date.now() / 1000);
+        const candle = { time: t, open: price, high: price * 1.02, low: price * 0.98, close: price };
+        candles.push(candle);
+        series.update(candle);
+      }, 10000);
+    }
+
+    init();
   </script>
 </body>
 </html>
