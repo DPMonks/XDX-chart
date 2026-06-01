@@ -21,9 +21,18 @@
     const series = chart.addCandlestickSeries();
 
     async function getXRPCandles() {
-      const url = "https://api.coingecko.com/api/v3/coins/ripple/ohlc?vs_currency=usd&days=1";
+      const target = "https://api.coingecko.com/api/v3/coins/ripple/ohlc?vs_currency=usd&days=1";
+
+      // CORS-safe proxy
+      const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(target);
+
       const res = await fetch(url);
       const data = await res.json();
+
+      if (!Array.isArray(data)) {
+        console.error("Invalid OHLC data:", data);
+        return [];
+      }
 
       return data.map(c => ({
         time: Math.floor(c[0] / 1000),
@@ -36,12 +45,14 @@
 
     async function loadChart() {
       const candles = await getXRPCandles();
-      series.setData(candles);
+      if (candles.length > 0) {
+        series.setData(candles);
+      }
     }
 
     loadChart();
 
-    // Optional: auto-refresh every minute
+    // Auto-refresh every minute
     setInterval(loadChart, 60000);
   </script>
 </body>
