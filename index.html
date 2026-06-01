@@ -29,7 +29,7 @@
     const series = chart.addCandlestickSeries();
 
     async function getForexCandles(symbol = "GBP/USD") {
-      const API_KEY = "demo"; // replace with your TwelveData key
+      const API_KEY = "demo"; YOUR_API_KEY
       const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1min&apikey=${API_KEY}`;
       const res = await fetch(url);
       const json = await res.json();
