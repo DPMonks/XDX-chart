@@ -8,6 +8,7 @@
     body {
       margin: 0;
       background: #0d1117;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     #chart {
       width: 100vw;
@@ -19,59 +20,59 @@
   <div id="chart"></div>
 
   <script>
-    const chart = LightweightCharts.createChart(document.getElementById("chart"), {
-      layout: {
-        background: { color: "#0d1117" },
-        textColor: "#d1d5db"
-      },
-      grid: {
-        vertLines: { color: "#1f2937" },
-        horzLines: { color: "#1f2937" }
+    document.addEventListener("DOMContentLoaded", () => {
+      const container = document.getElementById("chart");
+
+      // Safety check in case the library fails to load
+      if (typeof LightweightCharts === "undefined") {
+        console.error("LightweightCharts library not loaded.");
+        return;
       }
-    });
 
-    const series = chart.addCandlestickSeries();
+      const chart = LightweightCharts.createChart(container, {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        layout: {
+          background: { color: "#0d1117" },
+          textColor: "#d1d5db"
+        },
+        grid: {
+          vertLines: { color: "#1f2937" },
+          horzLines: { color: "#1f2937" }
+        },
+        timeScale: {
+          borderColor: "#1f2937"
+        },
+        rightPriceScale: {
+          borderColor: "#1f2937"
+        },
+      });
 
-    // Fetch live XDX/XRP price from XRPL.Services
-    async function getLivePrice() {
-      try {
-        const res = await fetch("https://xrpl.services/api/v1/token/XDX");
-        const data = await res.json();
-        return parseFloat(data.price_xrp);
-      } catch (e) {
-        console.error("XRPL fetch error:", e);
-        return null;
-      }
-    }
+      const series = chart.addCandlestickSeries({
+        upColor: "#22c55e",
+        downColor: "#ef4444",
+        borderVisible: false,
+        wickUpColor: "#22c55e",
+        wickDownColor: "#ef4444",
+      });
 
-    // Build initial candles
-    async function buildInitialCandles() {
-      const candles = [];
-      for (let i = 0; i < 50; i++) {
-        const price = await getLivePrice() || 0.0001;
-        const t = Math.floor(Date.now() / 1000) - (50 - i) * 60;
-        candles.push({ time: t, open: price, high: price * 1.02, low: price * 0.98, close: price });
-        await new Promise(r => setTimeout(r, 200));
-      }
-      return candles;
-    }
+      // Resize handling
+      window.addEventListener("resize", () => {
+        chart.applyOptions({
+          width: container.clientWidth,
+          height: container.clientHeight,
+        });
+      });
 
-    async function init() {
-      const candles = await buildInitialCandles();
-      series.setData(candles);
-
-      // Update every 10 seconds
-      setInterval(async () => {
-        const price = await getLivePrice();
-        if (!price) return;
-        const t = Math.floor(Date.now() / 1000);
-        const candle = { time: t, open: price, high: price * 1.02, low: price * 0.98, close: price };
-        candles.push(candle);
-        series.update(candle);
-      }, 10000);
-    }
-
-    init();
-  </script>
-</body>
-</html>
+      // Fetch live XDX/XRP price from XRPL.Services
+      async function getLivePrice() {
+        try {
+          const res = await fetch("https://xrpl.services/api/v1/token/XDX");
+          if (!res.ok) {
+            console.error("XRPL response not OK:", res.status, res.statusText);
+            return null;
+          }
+          const data = await res.json();
+          // Adjust this line to match the actual JSON structure from the API
+          const price = parseFloat(data.price_xrp ?? data.price ?? data.last_price);
+          if (
